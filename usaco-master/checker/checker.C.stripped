@@ -1,0 +1,88 @@
+/*
+ID: nissan.po1
+LANG: C++
+TASK: checker
+*/
+#include <fstream>
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+void reset_board();
+
+ofstream out("checker.out");
+ifstream in("checker.in");
+int size, solutions=0, ok_row[14], ok_ldiag[28], ok_rdiag[28], board[14][14];
+
+void place_queen(int col) {
+  int v1, v2;
+  if (col == size+1) {
+    // got a solution!
+    if (solutions < 3) { // only need to keep track of first 3 answers
+      int i,j;
+      for (i=1; i<size; ++i) {
+        for (j=1; j<=size; ++j) {
+          if (board[i][j]) {
+            out << j << " ";
+            break;
+          }
+        }
+      }
+      for (j=1; j<=size; ++j) {
+        if (board[i][j]) {
+          out << j << endl;
+          break;
+        }
+      }
+    }
+    ++solutions; // increment total number of answers
+    return;
+  }
+  for (int row=1; row<=size; ++row) {
+    if (ok_row[row]) {
+      // only need to check diagonals in here
+      v1 = row-col+size;
+      v2 = row+col;
+      if (ok_ldiag[v1] && ok_rdiag[v2]) {
+        ok_ldiag[v1] = ok_rdiag[v2] = 0;
+        ok_row[row] = 0;
+        board[row][col] = 1; // mark queen at square
+        place_queen(col+1);
+        // recursion failed; free up marked squares
+        board[row][col] = 0;
+        ok_row[row] = 1;
+        ok_ldiag[v1] = ok_rdiag[v2] = 1;
+      }
+    }
+  }
+}
+
+int main() {
+  int v1, v2;
+  in >> size;
+  // reset board
+  for (int i=0; i<=2*size; ++i) { ok_ldiag[i] = ok_rdiag[i] = 1; }
+  for (int i=0; i<=size; ++i) {
+    ok_row[i]=1;
+    for (int j=0; j<=size; ++j) board[i][j]=0;
+  }
+  // main loop
+  for (int row=1; row<=size; ++row) {
+    if (ok_row[row]) {
+      v1 = row-1+size;
+      v2 = row+1;
+      if (ok_ldiag[v1] && ok_rdiag[v2]) {
+        ok_ldiag[v1] = ok_rdiag[v2] = 0;
+        ok_row[row] = 0;
+        board[row][1] = 1;
+        place_queen(2);
+        board[row][1] = 0;
+        ok_row[row] = 1;
+        ok_ldiag[v1] = ok_rdiag[v2] = 1;
+      }
+    }
+  } 
+  out << solutions << endl;
+  in.close(); out.close();
+}

@@ -1,0 +1,101 @@
+/*
+ID: nissan.po1
+LANG: C++
+TASK: checker
+*/
+#include <fstream>
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+void reset_board();
+
+ofstream out("checker.out");
+ifstream in("checker.in");
+int size, solutions=0, ok_row[14], ok_ldiag[28], ok_rdiag[28], board[14][14];
+
+bool can_place_queen(int row, int col) {
+  // only need to check diagonals in here
+  int v1, v2;
+  v1 = row-col+size;
+  v2 = row+col;
+  if (ok_ldiag[v1] && ok_rdiag[v2]) {
+    ok_ldiag[v1] = ok_rdiag[v2] = 0;
+    return true;
+  }
+  else return false;
+}
+
+int pos_of_queen(int col) {
+  for (int row=1; row<=size; ++row) {
+    if (board[row][col]) {
+      return row;
+    }
+  }
+}
+
+void place_queen(int col) {
+  if (col == size+1) {
+    // got a solution!
+    if (solutions < 3) { // only need to keep track of first 3 answers
+      int i;
+      for (i=1; i<size; ++i) {
+         out << pos_of_queen(i) << " ";
+      }
+      out << pos_of_queen(i) << endl;
+    }
+    solutions += 1; // increment total number of answers
+    return;
+  }
+  for (int row=1; row<=size; ++row) {
+    if (ok_row[row]) {
+      // only need to check diagonals in here
+      int v1, v2;
+      v1 = row-col+size;
+      v2 = row+col;
+      if (ok_ldiag[v1] && ok_rdiag[v2]) {
+        ok_ldiag[v1] = ok_rdiag[v2] = 0;
+        ok_row[row] = 0;
+        board[row][col] = 1; // mark queen at square
+        place_queen(col+1);
+        // recursion failed; free up marked squares
+        board[row][col] = 0;
+        ok_row[row] = 1;
+        ok_ldiag[v1] = ok_rdiag[v2] = 1;
+      }
+    }
+  }
+}
+
+void reset_board() {
+  for (int i=0; i<=2*size; ++i) { ok_ldiag[i] = ok_rdiag[i] = 1; }
+  for (int i=0; i<=size; ++i) {
+    ok_row[i]=1;
+    //for (int j=0; j<=size; ++j) board[i][j]=0;
+  }
+}
+
+int main() {
+  int v1, v2;
+  in >> size;
+  // main loop
+  reset_board();
+  for (int row=1; row<=size; ++row) {
+    if (ok_row[row]) {
+      v1 = row-1+size;
+      v2 = row+1;
+      if (ok_ldiag[v1] && ok_rdiag[v2]) {
+        ok_ldiag[v1] = ok_rdiag[v2] = 0;
+        ok_row[row] = 0;
+        board[row][1] = 1;
+        place_queen(2);
+        board[row][1] = 0;
+        ok_row[row] = 1;
+        ok_ldiag[v1] = ok_rdiag[v2] = 1;
+      }
+    }
+  } 
+  out << solutions << endl;
+  in.close(); out.close();
+}
